@@ -10,6 +10,23 @@
 
 #include "network.h"
 
+vector<std::string> split(const std::string& str, const std::string& delimiters) {
+	
+	std::vector<std::string> v;
+	std::string::size_type start = 0;
+	auto pos = str.find_first_of(delimiters, start);
+	while (pos != std::string::npos) {
+		if (pos != start) // ignore empty tokens
+			v.emplace_back(str, start, pos - start);
+		start = pos + 1;
+		pos = str.find_first_of(delimiters, start);
+	}
+	if (start < str.length()) // ignore trailing delimiter
+		v.emplace_back(str, start, str.length() - start); // add what's left of the string
+	return v;
+
+}
+
 int main(int argc, char **argv)
 {
 
@@ -18,10 +35,10 @@ int main(int argc, char **argv)
 	opt.addUsage("");
 	opt.addUsage("Usage: ");
 	opt.addUsage("");
-	opt.addUsage(" -h  --help         Prints this help ");
-	opt.addUsage(" -s  --server       Starts as server");
-	opt.addUsage(" -c  --client [ip]  Starts as client");
-	opt.addUsage(" -n  --nick [nick]  Chat nick name");
+	opt.addUsage(" -h  --help              Prints this help ");
+	opt.addUsage(" -s  --server            Starts as server");
+	opt.addUsage(" -c  --client [ip:port]  Starts as client");
+	opt.addUsage(" -n  --nick [nick]       Chat nick name");
 	opt.addUsage("");
 
 	opt.setFlag("help", 'h');
@@ -39,10 +56,10 @@ int main(int argc, char **argv)
 	if (opt.getFlag("help") || opt.getFlag('h'))
 		opt.printUsage();
 
-	const int portNum = 1234;
+	const int aPortNum = 1234;
 
-	const int passwordLength = 8;
-	char password[passwordLength + 1];
+	const int aPasswordLength = 8;
+	char aPassword[aPasswordLength + 1];
 	char *aNickName = NULL;
 
 	srand((unsigned int)time(NULL));
@@ -61,21 +78,21 @@ int main(int argc, char **argv)
 		Network.SetNetworkMode(NETWORKMODE_SERVER);
 
 		std::cout << "Password: ";
-		for (int i = 0; i < passwordLength; i++)
+		for (int i = 0; i < aPasswordLength; i++)
 		{
 			if (i % 2 == 0)
-				password[i] = 0x41 + rand() % 26;
+				aPassword[i] = 0x41 + rand() % 26;
 			else
-				password[i] = 0x30 + rand() % 10;
+				aPassword[i] = 0x30 + rand() % 10;
 
-			std::cout << password[i];
+			std::cout << aPassword[i];
 		}
 
 		std::cout << std::endl;
 
 		std::cout << "Waiting for client to connect..." << std::endl;
 
-		if (!Network.Connect("", portNum))
+		if (!Network.Connect("", aPortNum))
 		{
 			std::cout << "Unable to connect!" << std::endl;
 			return -1;
@@ -87,11 +104,13 @@ int main(int argc, char **argv)
 		std::cout << "*** STARTING AS CLIENT" << std::endl;
 		Network.SetNetworkMode(NETWORKMODE_CLIENT);
 
-		char* anIpAddress = opt.getValue("client") != NULL ? opt.getValue("client") : opt.getValue("c");
+		char* anIpAddressPort = opt.getValue("client") != NULL ? opt.getValue("client") : opt.getValue("c");
 
-		std::cout << "Connecting to: " << anIpAddress << std::endl;
+		std::cout << "Connecting to: " << anIpAddressPort << std::endl;
 
-		if (!Network.Connect(anIpAddress, portNum))
+		std::vector<std::string> vecIpAddressPort = split(anIpAddressPort, ":");
+
+		if (!Network.Connect(vecIpAddressPort[0].c_str(), stoi(vecIpAddressPort[1])))
 		{
 			std::cout << "Unable to connect!" << std::endl;
 			return -1;
@@ -127,15 +146,15 @@ int main(int argc, char **argv)
 		cout << "Enter password: ";
 		cin.get(line, 256);
 
-		for (int i = 0; i < passwordLength; i++)
-			password[i] = line[i];
+		for (int i = 0; i < aPasswordLength; i++)
+			aPassword[i] = line[i];
 
 	}
 
 	ByteArray key;
 
-	for (int i = 0; i < passwordLength; i++)
-		key.push_back(password[i]);
+	for (int i = 0; i < aPasswordLength; i++)
+		key.push_back(aPassword[i]);
 
 	Aes256 aes(key);
 
