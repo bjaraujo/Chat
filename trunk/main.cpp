@@ -51,7 +51,7 @@ int main(int argc, char **argv)
 
 	if (opt.getValue("nick") != NULL || opt.getValue('n') != NULL)
 	{
-		aNickName = opt.getValue("nick");
+		aNickName = opt.getValue("nick") != NULL ? opt.getValue("nick") : opt.getValue("n");
 		std::cout << "nick = " << aNickName << endl;
 	}
 
@@ -87,9 +87,11 @@ int main(int argc, char **argv)
 		std::cout << "*** STARTING AS CLIENT" << std::endl;
 		Network.SetNetworkMode(NETWORKMODE_CLIENT);
 
-		std::cout << "Connecting to: " << opt.getValue("client") << std::endl;
+		char* anIpAddress = opt.getValue("client") != NULL ? opt.getValue("client") : opt.getValue("c");
 
-		if (!Network.Connect(opt.getValue("client"), portNum))
+		std::cout << "Connecting to: " << anIpAddress << std::endl;
+
+		if (!Network.Connect(anIpAddress, portNum))
 		{
 			std::cout << "Unable to connect!" << std::endl;
 			return -1;
