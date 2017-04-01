@@ -18,6 +18,17 @@ CNetwork::~CNetwork(void)
 
 }
 
+void CNetwork::Sleep(const int ms)
+{
+	 
+#ifdef __linux__
+	usleep(ms * 1000);   // usleep takes sleep time in us (1 millionth of a second)
+#else
+	::Sleep(ms);
+#endif
+
+}
+
 ENetworkMode CNetwork::NetworkMode()
 {
 
@@ -54,7 +65,7 @@ bool CNetwork::UDPSendString(IPaddress& ip, std::string data)
 	packet.data = (Uint8*) data.c_str();
 	packet.len = data.length();
 
-	std::cout << "Sending: " << data << std::endl;
+	//std::cout << "Sending: " << data << std::endl;
 
 	int numSent = SDLNet_UDP_Send(m_udpSocket, packet.channel, &packet);
 
@@ -97,7 +108,6 @@ bool CNetwork::UDPRecieveString(IPaddress& ip, std::string& data)
 bool CNetwork::Pair(std::string proxyIpAddressString, int proxyPortNum, std::string& pairIpAddress, int& pairPortNum)
 {
 
-	// create a UDPsocket
 	m_udpSocket = SDLNet_UDP_Open(proxyPortNum);
 	
 	if (!m_udpSocket) {
@@ -141,15 +151,18 @@ bool CNetwork::Pair(std::string proxyIpAddressString, int proxyPortNum, std::str
 
 		}
 
-#ifdef __linux__
-		usleep(1000 * 1000);   // usleep takes sleep time in us (1 millionth of a second)
-#else
-		Sleep(1000);
-#endif
+		this->Sleep(1000);
 
 	}
 
 	UDPSendString(ipProxy, "END");
+
+	return true;
+
+}
+
+bool CNetwork::Connect(const std::string pairIpAddress, const int pairPortNum)
+{
 
 	if (SDLNet_ResolveHost(&m_ip, pairIpAddress.c_str(), pairPortNum) == SDL_ERROR)
 	{
@@ -160,39 +173,16 @@ bool CNetwork::Pair(std::string proxyIpAddressString, int proxyPortNum, std::str
 	for (int i = 0; i < 5; i++)
 	{
 
-		if (m_NetworkMode == NETWORKMODE_SERVER)
-			UDPSendString(m_ip, "Hello CLIENT");
-		else if (m_NetworkMode == NETWORKMODE_CLIENT)
-			UDPSendString(m_ip, "Hello SERVER");
+		UDPSendString(m_ip, "ACK");
 
 		std::string data;
 		UDPRecieveString(m_ip, data);
 
-		std::cout << "Recieved message: " << data << std::endl;
-
-#ifdef __linux__
-		usleep(1000 * 1000);   // usleep takes sleep time in us (1 millionth of a second)
-#else
-		Sleep(1000);
-#endif
+		this->Sleep(500);
 
 	}
 
-	for (int i = 0; i < 20; i++)
-	{
-
-		std::string data;
-		UDPRecieveString(m_ip, data);
-
-		std::cout << "Recieved message: " << data << std::endl;
-
-#ifdef __linux__
-		usleep(250 * 1000);   // usleep takes sleep time in us (1 millionth of a second)
-#else
-		Sleep(250);
-#endif
-
-	}
+	this->Sleep(1000);
 
 	return true;
 

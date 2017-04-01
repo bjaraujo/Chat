@@ -50,8 +50,11 @@ public:
     ENetworkMode   NetworkMode();
     void           SetNetworkMode(ENetworkMode NetworkMode);
 
+	void           Sleep(const int ms);
+
 	bool		   Initialize();
 	bool		   Pair(const std::string proxyIpAddressString, int proxyPortNum, std::string& pairIpAddress, int& pairPortNum);
+	bool		   Connect(const std::string pairIpAddress, const int pairPortNum);
 
     bool           Send(const std::string data);
     bool           Receive(std::string& data);

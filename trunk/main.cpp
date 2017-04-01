@@ -75,6 +75,8 @@ int main(int argc, char **argv)
 
 	Network.Pair(proxyIpAddress, proxyPortNum, pairIpAddress, pairPortNum);
 
+	Network.Connect(pairIpAddress, pairPortNum);
+
 	if (Network.NetworkMode() == NETWORKMODE_SERVER)
 	{
 		std::cout << "Password: ";
@@ -98,13 +100,30 @@ int main(int argc, char **argv)
 	if (nickName.empty())
 		std::cout << "Error no nickname!" << std::endl;
 
-	int len = 0;
-
+	// Sync
 	std::string pairNickName;
 
-	Network.Send(nickName);
-	Sleep(1000);
-	Network.Receive(pairNickName);
+	while (true)
+	{
+		Network.Send("NICK:" + nickName);
+
+		std::string data;
+		Network.Receive(data);
+
+		if (!data.empty())
+		{
+			int pos = data.find("NICK:");
+
+			if (pos != std::string::npos)
+			{
+				pairNickName = data.substr(5, data.length() - 5);
+				break;
+			}
+		}
+
+		Network.Sleep(1000);
+
+	}
 
 	std::cout << "Talking to: " << pairNickName << std::endl;
 
@@ -128,6 +147,7 @@ int main(int argc, char **argv)
 
 	Aes256 aes(key);
 
+	int len = 0;
 	char sendBuffer[512];
 
 	std::cout << "> ";
@@ -198,10 +218,7 @@ int main(int argc, char **argv)
 			
 			if (aes.decrypt(key, (unsigned char*)recieveBuffer.c_str(), recieveBuffer.length(), recvBufferEnc) > 0)
 			{
-				if (Network.NetworkMode() == NETWORKMODE_SERVER)
-					std::cout << pairNickName << ": " << recvBufferEnc.data() << std::endl;
-				else if (Network.NetworkMode() == NETWORKMODE_CLIENT)
-					std::cout << pairNickName << ": " << recvBufferEnc.data() << std::endl;
+				std::cout << pairNickName << ": " << recvBufferEnc.data() << std::endl;
 			}
 
 			// Beep
