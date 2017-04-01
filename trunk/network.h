@@ -16,14 +16,13 @@
 
 enum ENetworkMode
 {
-    NETWORKMODE_LOCAL,
-    NETWORKMODE_SERVER,
+    NETWORKMODE_HOST,
     NETWORKMODE_CLIENT
 };
 
 enum ESocketType
 {
-    SOCKET_SERVER,
+    SOCKET_HOST,
     SOCKET_CLIENT
 };
 

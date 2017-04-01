@@ -56,7 +56,7 @@ int main(int argc, char **argv)
 	Network.Initialize();
 
 	// Pair client and server
-	const std::string proxyIpAddress = "80.79.23.180";
+	const std::string proxyIpAddress = "80.79.23.114";
 	const int proxyPortNum = 1234;
 
 	std::string pairIpAddress;
@@ -64,8 +64,8 @@ int main(int argc, char **argv)
 
 	if (opt.getFlag("server") || opt.getFlag('s'))
 	{
-		std::cout << "*** STARTING AS SERVER" << std::endl;
-		Network.SetNetworkMode(NETWORKMODE_SERVER);
+		std::cout << "*** STARTING AS HOST" << std::endl;
+		Network.SetNetworkMode(NETWORKMODE_HOST);
 	}
 	else if (opt.getValue("client") || opt.getValue('c'))
 	{
@@ -77,7 +77,7 @@ int main(int argc, char **argv)
 
 	Network.Connect(pairIpAddress, pairPortNum);
 
-	if (Network.NetworkMode() == NETWORKMODE_SERVER)
+	if (Network.NetworkMode() == NETWORKMODE_HOST)
 	{
 		std::cout << "Password: ";
 		for (int i = 0; i < passwordLength; i++)
@@ -122,6 +122,17 @@ int main(int argc, char **argv)
 		}
 
 		Network.Sleep(1000);
+
+	}
+
+	// Flush receive buffer
+	for (int i = 0; i < 6; i++)
+	{
+
+		std::string data;
+		Network.Receive(data);
+
+		Network.Sleep(500);
 
 	}
 
@@ -200,12 +211,7 @@ int main(int argc, char **argv)
 
 		}
 
-		#ifdef LINUX
-				usleep(20 * 1000);   // usleep takes sleep time in us (1 millionth of a second)
-		#endif
-		#ifdef WINDOWS
-				Sleep(20);
-		#endif
+		Network.Sleep(20);
 
 		// Recieve messages
 		std::string recieveBuffer;

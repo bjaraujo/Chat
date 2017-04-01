@@ -6,8 +6,7 @@
 CNetwork::CNetwork()
 {
 
-    m_NetworkMode = NETWORKMODE_LOCAL;
-
+    m_NetworkMode = NETWORKMODE_HOST;
     m_udpSocket = NULL;
 
 }
@@ -128,7 +127,7 @@ bool CNetwork::Pair(std::string proxyIpAddressString, int proxyPortNum, std::str
 	while (true)
 	{
 
-		if (m_NetworkMode == NETWORKMODE_SERVER)
+		if (m_NetworkMode == NETWORKMODE_HOST)
 			UDPSendString(ipProxy, "A");
 		else if (m_NetworkMode == NETWORKMODE_CLIENT)
 			UDPSendString(ipProxy, "B");
