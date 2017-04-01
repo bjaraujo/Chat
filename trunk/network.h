@@ -36,12 +36,11 @@ private:
 
     ENetworkMode m_NetworkMode;
 
-    TCPsocket m_Socket;
-    TCPsocket m_ClientSocket;
-    SDLNet_SocketSet m_socketSet;
+	UDPsocket m_udpSocket;
+	IPaddress m_ip;
 
-	bool           UDPSendString(UDPsocket& udpSocket, IPaddress& ip, std::string data);
-	bool		   UDPRecieveString(UDPsocket& udpSocket, IPaddress& ip, std::string& data);
+	bool           UDPSendString(IPaddress& ip, std::string data);
+	bool		   UDPRecieveString(IPaddress& ip, std::string& data);
 
 public:
 
@@ -53,14 +52,9 @@ public:
 
 	bool		   Initialize();
 	bool		   Pair(const std::string proxyIpAddressString, int proxyPortNum, std::string& pairIpAddress, int& pairPortNum);
-    bool           Connect(const std::string IpAddressString, int port);
-    bool           Disconnect();
 
-    bool           Send(ESocketType SocketType, const char* buf, int len);
-    int            Receive(ESocketType SocketType, char* buf, int len);
-    int            ReceiveNonBlocking(ESocketType SocketType, char* buf, int len);
-
-    unsigned long  CheckSum(const char *buf);
+    bool           Send(const std::string data);
+    bool           Receive(std::string& data);
 
 };
 

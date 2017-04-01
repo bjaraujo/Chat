@@ -20,13 +20,13 @@ int main(int argc, char **argv)
 	opt.addUsage("");
 	opt.addUsage(" -h  --help              Prints this help ");
 	opt.addUsage(" -s  --server            Starts as server");
-	opt.addUsage(" -c  --client [ip:port]  Starts as client");
+	opt.addUsage(" -c  --client            Starts as client");
 	opt.addUsage(" -n  --nick [nick]       Chat nick name");
 	opt.addUsage("");
 
 	opt.setFlag("help", 'h');
 	opt.setFlag("server", 's');
-	opt.setOption("client", 'c');
+	opt.setFlag("client", 'c');
 	opt.setOption("nick", 'n');
 
 	opt.processCommandArgs(argc, argv);
@@ -41,7 +41,7 @@ int main(int argc, char **argv)
 
 	const int passwordLength = 8;
 	char password[passwordLength + 1];
-	char *nickName = NULL;
+	std::string nickName;
 
 	srand((unsigned int)time(NULL));
 
@@ -49,7 +49,7 @@ int main(int argc, char **argv)
 
 	if (opt.getValue("nick") != NULL || opt.getValue('n') != NULL)
 	{
-		nickName = opt.getValue("nick") != NULL ? opt.getValue("nick") : opt.getValue("n");
+		nickName = std::string(opt.getValue("nick") != NULL ? opt.getValue("nick") : opt.getValue("n"));
 		std::cout << "nick = " << nickName << endl;
 	}
 
@@ -66,9 +66,17 @@ int main(int argc, char **argv)
 	{
 		std::cout << "*** STARTING AS SERVER" << std::endl;
 		Network.SetNetworkMode(NETWORKMODE_SERVER);
+	}
+	else if (opt.getValue("client") || opt.getValue('c'))
+	{
+		std::cout << "*** STARTING AS CLIENT" << std::endl;
+		Network.SetNetworkMode(NETWORKMODE_CLIENT);
+	}
 
-		Network.Pair(proxyIpAddress, proxyPortNum, pairIpAddress, pairPortNum);
+	Network.Pair(proxyIpAddress, proxyPortNum, pairIpAddress, pairPortNum);
 
+	if (Network.NetworkMode() == NETWORKMODE_SERVER)
+	{
 		std::cout << "Password: ";
 		for (int i = 0; i < passwordLength; i++)
 		{
@@ -83,51 +91,25 @@ int main(int argc, char **argv)
 		std::cout << std::endl;
 
 		std::cout << "Waiting for client to connect..." << std::endl;
-
-		if (!Network.Connect("", pairPortNum))
-		{
-			std::cout << "Unable to connect!" << std::endl;
-			return -1;
-		}
-
-	}
-	else if (opt.getValue("client") || opt.getValue('c'))
-	{
-		std::cout << "*** STARTING AS CLIENT" << std::endl;
-		Network.SetNetworkMode(NETWORKMODE_CLIENT);
-
-		Network.Pair(proxyIpAddress, proxyPortNum, pairIpAddress, pairPortNum);
-
-		if (!Network.Connect(pairIpAddress, pairPortNum))
-		{
-			std::cout << "Unable to connect!" << std::endl;
-			return -1;
-		}
 	}
 
-	if (nickName == NULL)
+	std::cout << "Successfully connected to " << pairIpAddress << ":" << pairPortNum << std::endl;
+
+	if (nickName.empty())
 		std::cout << "Error no nickname!" << std::endl;
 
 	int len = 0;
 
-	char anotherNickName[80];
+	std::string pairNickName;
 
-	if (Network.NetworkMode() == NETWORKMODE_SERVER)
+	Network.Send(nickName);
+	Sleep(1000);
+	Network.Receive(pairNickName);
+
+	std::cout << "Talking to: " << pairNickName << std::endl;
+
+	if (Network.NetworkMode() == NETWORKMODE_CLIENT)
 	{
-		std::cout << "Successfully connected to client." << std::endl;
-
-		Network.Send(SOCKET_CLIENT, nickName, 80);
-		Network.Receive(SOCKET_CLIENT, &anotherNickName[0], 80);
-		std::cout << "Talking to: " << anotherNickName << std::endl;
-
-	}
-	else if (Network.NetworkMode() == NETWORKMODE_CLIENT)
-	{
-		std::cout << "Successfully connected to server." << std::endl;
-
-		Network.Send(SOCKET_SERVER, nickName, 80);
-		Network.Receive(SOCKET_SERVER, &anotherNickName[0], 80);
-		std::cout << "Talking to: " << anotherNickName << std::endl;
 
 		char line[256];
 
@@ -147,7 +129,6 @@ int main(int argc, char **argv)
 	Aes256 aes(key);
 
 	char sendBuffer[512];
-	char recieveBuffer[512];
 
 	std::cout << "> ";
 
@@ -190,10 +171,7 @@ int main(int argc, char **argv)
 				ByteArray sendBufferEnc;
 				aes.encrypt(key, (unsigned char*)sendBuffer, len, sendBufferEnc);
 
-				if (Network.NetworkMode() == NETWORKMODE_SERVER)
-					Network.Send(SOCKET_CLIENT, (char *)sendBufferEnc.data(), sendBufferEnc.size());
-				else if (Network.NetworkMode() == NETWORKMODE_CLIENT)
-					Network.Send(SOCKET_SERVER, (char *)sendBufferEnc.data(), sendBufferEnc.size());
+				Network.Send(std::string((char*)sendBufferEnc.data()));
 
 				len = 0;
 
@@ -210,40 +188,21 @@ int main(int argc, char **argv)
 		#endif
 
 		// Recieve messages
-		int Received = 0;
-		int Bufsize = 512;
+		std::string recieveBuffer;
 
-		do {
-
-			if (Network.NetworkMode() == NETWORKMODE_SERVER)
-				Received += Network.ReceiveNonBlocking(SOCKET_CLIENT, &recieveBuffer[Received], Bufsize);
-			else if (Network.NetworkMode() == NETWORKMODE_CLIENT)
-				Received += Network.ReceiveNonBlocking(SOCKET_SERVER, &recieveBuffer[Received], Bufsize);
-
-			if (Received == SDL_ERROR)
-			{
-				std::cout << "Recieve error: " << SDLNet_GetError();
-				break;
-			}
-
-			if (Received > 0)
-				Bufsize -= Received;
-			else
-				break;
-
-		} while (Bufsize > 0);
-
-		if (Received > 0)
+		if (Network.Receive(recieveBuffer))
 		{
 			std::cout << std::endl;
 
 			ByteArray recvBufferEnc;
-			aes.decrypt(key, (unsigned char*)recieveBuffer, Received, recvBufferEnc);
-
-			if (Network.NetworkMode() == NETWORKMODE_SERVER)
-				std::cout << anotherNickName << ": " << recvBufferEnc.data() << std::endl;
-			else if (Network.NetworkMode() == NETWORKMODE_CLIENT)
-				std::cout << anotherNickName << ": " << recvBufferEnc.data() << std::endl;
+			
+			if (aes.decrypt(key, (unsigned char*)recieveBuffer.c_str(), recieveBuffer.length(), recvBufferEnc) > 0)
+			{
+				if (Network.NetworkMode() == NETWORKMODE_SERVER)
+					std::cout << pairNickName << ": " << recvBufferEnc.data() << std::endl;
+				else if (Network.NetworkMode() == NETWORKMODE_CLIENT)
+					std::cout << pairNickName << ": " << recvBufferEnc.data() << std::endl;
+			}
 
 			// Beep
 			std::cout << '\a';

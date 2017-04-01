@@ -25,20 +25,16 @@ while True:
     if data == "A":
         UDP_IP_A = addr[0];
         UDP_PORT_A = addr[1];
-
-        sock.sendto("ACK", (UDP_IP_A, UDP_PORT_A))
         
-        if UDP_IP_B != "": 
+        if UDP_IP_B != "" and not sentToA: 
             sock.sendto(UDP_IP_B + ":" + str(UDP_PORT_B), (UDP_IP_A, UDP_PORT_A))
             sentToA = True
             
     elif data == "B":
         UDP_IP_B = addr[0];
         UDP_PORT_B = addr[1];
-
-        sock.sendto("ACK", (UDP_IP_B, UDP_PORT_B))
         
-        if UDP_IP_A != "": 
+        if UDP_IP_A != "" and not sentToB: 
             sock.sendto(UDP_IP_A + ":" + str(UDP_PORT_A), (UDP_IP_B, UDP_PORT_B))
             sentToB = True
          
@@ -46,6 +42,9 @@ while True:
         UDP_IP_A = ""
         UDP_IP_B = ""
 
+        sentToA = False
+        sentToB = False
+        
         A_CONNECTED = False
         B_CONNECTED = False
         
@@ -56,11 +55,13 @@ while True:
 
         if addr[0] == UDP_IP_B:
             B_CONNECTED = True
-            
+           
+    '''
     if A_CONNECTED and B_CONNECTED:
                 
         sock.sendto("ACK", (UDP_IP_A, UDP_PORT_A))
         sock.sendto("ACK", (UDP_IP_B, UDP_PORT_B))
-
+    '''
+    
     time.sleep(1)
 
