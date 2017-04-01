@@ -10,23 +10,6 @@
 
 #include "network.h"
 
-vector<std::string> split(const std::string& str, const std::string& delimiters) {
-	
-	std::vector<std::string> v;
-	std::string::size_type start = 0;
-	auto pos = str.find_first_of(delimiters, start);
-	while (pos != std::string::npos) {
-		if (pos != start) // ignore empty tokens
-			v.emplace_back(str, start, pos - start);
-		start = pos + 1;
-		pos = str.find_first_of(delimiters, start);
-	}
-	if (start < str.length()) // ignore trailing delimiter
-		v.emplace_back(str, start, str.length() - start); // add what's left of the string
-	return v;
-
-}
-
 int main(int argc, char **argv)
 {
 
@@ -56,11 +39,9 @@ int main(int argc, char **argv)
 	if (opt.getFlag("help") || opt.getFlag('h'))
 		opt.printUsage();
 
-	const int aPortNum = 1234;
-
-	const int aPasswordLength = 8;
-	char aPassword[aPasswordLength + 1];
-	char *aNickName = NULL;
+	const int passwordLength = 8;
+	char password[passwordLength + 1];
+	char *nickName = NULL;
 
 	srand((unsigned int)time(NULL));
 
@@ -68,31 +49,42 @@ int main(int argc, char **argv)
 
 	if (opt.getValue("nick") != NULL || opt.getValue('n') != NULL)
 	{
-		aNickName = opt.getValue("nick") != NULL ? opt.getValue("nick") : opt.getValue("n");
-		std::cout << "nick = " << aNickName << endl;
+		nickName = opt.getValue("nick") != NULL ? opt.getValue("nick") : opt.getValue("n");
+		std::cout << "nick = " << nickName << endl;
 	}
+
+	Network.Initialize();
+
+	// Pair client and server
+	const std::string proxyIpAddress = "80.79.23.180";
+	const int proxyPortNum = 1234;
+
+	std::string pairIpAddress;
+	int pairPortNum;
 
 	if (opt.getFlag("server") || opt.getFlag('s'))
 	{
 		std::cout << "*** STARTING AS SERVER" << std::endl;
 		Network.SetNetworkMode(NETWORKMODE_SERVER);
 
+		Network.Pair(proxyIpAddress, proxyPortNum, pairIpAddress, pairPortNum);
+
 		std::cout << "Password: ";
-		for (int i = 0; i < aPasswordLength; i++)
+		for (int i = 0; i < passwordLength; i++)
 		{
 			if (i % 2 == 0)
-				aPassword[i] = 0x41 + rand() % 26;
+				password[i] = 0x41 + rand() % 26;
 			else
-				aPassword[i] = 0x30 + rand() % 10;
+				password[i] = 0x30 + rand() % 10;
 
-			std::cout << aPassword[i];
+			std::cout << password[i];
 		}
 
 		std::cout << std::endl;
 
 		std::cout << "Waiting for client to connect..." << std::endl;
 
-		if (!Network.Connect("", aPortNum))
+		if (!Network.Connect("", pairPortNum))
 		{
 			std::cout << "Unable to connect!" << std::endl;
 			return -1;
@@ -104,20 +96,16 @@ int main(int argc, char **argv)
 		std::cout << "*** STARTING AS CLIENT" << std::endl;
 		Network.SetNetworkMode(NETWORKMODE_CLIENT);
 
-		char* anIpAddressPort = opt.getValue("client") != NULL ? opt.getValue("client") : opt.getValue("c");
+		Network.Pair(proxyIpAddress, proxyPortNum, pairIpAddress, pairPortNum);
 
-		std::cout << "Connecting to: " << anIpAddressPort << std::endl;
-
-		std::vector<std::string> vecIpAddressPort = split(anIpAddressPort, ":");
-
-		if (!Network.Connect(vecIpAddressPort[0].c_str(), stoi(vecIpAddressPort[1])))
+		if (!Network.Connect(pairIpAddress, pairPortNum))
 		{
 			std::cout << "Unable to connect!" << std::endl;
 			return -1;
 		}
 	}
 
-	if (aNickName == NULL)
+	if (nickName == NULL)
 		std::cout << "Error no nickname!" << std::endl;
 
 	int len = 0;
@@ -128,7 +116,7 @@ int main(int argc, char **argv)
 	{
 		std::cout << "Successfully connected to client." << std::endl;
 
-		Network.Send(SOCKET_CLIENT, aNickName, 80);
+		Network.Send(SOCKET_CLIENT, nickName, 80);
 		Network.Receive(SOCKET_CLIENT, &anotherNickName[0], 80);
 		std::cout << "Talking to: " << anotherNickName << std::endl;
 
@@ -137,7 +125,7 @@ int main(int argc, char **argv)
 	{
 		std::cout << "Successfully connected to server." << std::endl;
 
-		Network.Send(SOCKET_SERVER, aNickName, 80);
+		Network.Send(SOCKET_SERVER, nickName, 80);
 		Network.Receive(SOCKET_SERVER, &anotherNickName[0], 80);
 		std::cout << "Talking to: " << anotherNickName << std::endl;
 
@@ -146,15 +134,15 @@ int main(int argc, char **argv)
 		cout << "Enter password: ";
 		cin.get(line, 256);
 
-		for (int i = 0; i < aPasswordLength; i++)
-			aPassword[i] = line[i];
+		for (int i = 0; i < passwordLength; i++)
+			password[i] = line[i];
 
 	}
 
 	ByteArray key;
 
-	for (int i = 0; i < aPasswordLength; i++)
-		key.push_back(aPassword[i]);
+	for (int i = 0; i < passwordLength; i++)
+		key.push_back(password[i]);
 
 	Aes256 aes(key);
 
@@ -183,8 +171,6 @@ int main(int argc, char **argv)
 			else
 			{
 				std::cout << cur;
-
-
 			}
 
 			if (cur != 13 && len < 511)
@@ -212,7 +198,6 @@ int main(int argc, char **argv)
 				len = 0;
 
 				std::cout << "> ";
-
 			}
 
 		}

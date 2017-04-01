@@ -1,12 +1,16 @@
 
 #pragma once
 
-#ifdef LINUX
+#ifdef __linux__
 #include <unistd.h>
-#endif
-#ifdef WINDOWS
+#else
 #include <windows.h>
 #endif
+
+#include <vector>
+#include <string>
+#include <sstream>
+#include <iterator>
 
 #include "SDL_net.h"
 
@@ -36,6 +40,9 @@ private:
     TCPsocket m_ClientSocket;
     SDLNet_SocketSet m_socketSet;
 
+	bool           UDPSendString(UDPsocket& udpSocket, IPaddress& ip, std::string data);
+	bool		   UDPRecieveString(UDPsocket& udpSocket, IPaddress& ip, std::string& data);
+
 public:
 
     CNetwork();
@@ -44,7 +51,9 @@ public:
     ENetworkMode   NetworkMode();
     void           SetNetworkMode(ENetworkMode NetworkMode);
 
-    bool           Connect(const char* IpAddressString, int port);
+	bool		   Initialize();
+	bool		   Pair(const std::string proxyIpAddressString, int proxyPortNum, std::string& pairIpAddress, int& pairPortNum);
+    bool           Connect(const std::string IpAddressString, int port);
     bool           Disconnect();
 
     bool           Send(ESocketType SocketType, const char* buf, int len);
@@ -54,3 +63,4 @@ public:
     unsigned long  CheckSum(const char *buf);
 
 };
+

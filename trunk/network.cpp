@@ -32,14 +32,193 @@ void CNetwork::SetNetworkMode(ENetworkMode NetworkMode)
 
 }
 
-bool CNetwork::Connect(const char* IpAddressString, int port)
+bool CNetwork::Initialize()
 {
 
-    if (SDLNet_Init() == SDL_ERROR)
-    {
-        std::cout << "Init failed: " << SDLNet_GetError();
-        return false;
-    }
+	if (SDLNet_Init() == SDL_ERROR)
+	{
+		std::cout << "Init failed: " << SDLNet_GetError() << std::endl;
+		return false;
+	}
+
+	return true;
+
+}
+
+bool CNetwork::UDPSendString(UDPsocket& udpSocket, IPaddress& ip, std::string data)
+{
+
+	UDPpacket packet;
+	packet.address = ip;
+	packet.channel = -1;
+	packet.data = (Uint8*) data.c_str();
+	packet.len = data.length();
+
+	std::cout << "Sending: " << data << std::endl;
+
+	int numSent = SDLNet_UDP_Send(udpSocket, packet.channel, &packet);
+
+	if (!numSent) {
+		std::cout << "SDLNet_UDP_Send: " << SDLNet_GetError() << std::endl;
+		return false;
+	}
+
+	return true;
+
+}
+
+bool CNetwork::UDPRecieveString(UDPsocket& udpSocket, IPaddress& ip, std::string& data)
+{
+
+	// try to receive a waiting udp packet
+	//UDPsocket udpsock;
+	UDPpacket *packet;
+	
+	if (!(packet = SDLNet_AllocPacket(1024)))
+	{
+		std::cout << "SDLNet_AllocPacket: " << SDLNet_GetError() << std::endl;
+		return false;
+	}
+
+	int numRecv = SDLNet_UDP_Recv(udpSocket, packet);
+
+	if (numRecv) 
+	{
+		data = std::string((char*)packet->data, packet->len);
+		return true;
+	}
+
+	return false;
+
+}
+
+bool CNetwork::Pair(std::string proxyIpAddressString, int proxyPortNum, std::string& pairIpAddress, int& pairPortNum)
+{
+
+	// create a UDPsocket
+	UDPsocket udpSocket = SDLNet_UDP_Open(proxyPortNum);
+	
+	if (!udpSocket) {
+		std::cout << "UDP open failed:" << SDLNet_GetError() << std::endl;
+		return false;
+	}
+
+	IPaddress ip;
+
+	if (SDLNet_ResolveHost(&ip, proxyIpAddressString.c_str(), proxyPortNum) == SDL_ERROR)
+	{
+		std::cout << "Connection failed: " << SDLNet_GetError() << std::endl;
+		return false;
+	}
+
+	UDPSendString(udpSocket, ip, "START");
+
+	while (true)
+	{
+
+		if (m_NetworkMode == NETWORKMODE_SERVER)
+			UDPSendString(udpSocket, ip, "A");
+		else if (m_NetworkMode == NETWORKMODE_CLIENT)
+			UDPSendString(udpSocket, ip, "B");
+
+		std::string data;
+
+		if (UDPRecieveString(udpSocket, ip, data))
+		{
+
+			int pos = data.find(":");
+
+			if (pos != std::string::npos) {
+
+				pairIpAddress = data.substr(0, pos);
+				pairPortNum = stoi(data.substr(pos + 1, data.length() - pos - 1));
+
+				std::cout << "Pair ip address: " << data << std::endl;
+				break;
+			}
+
+		}
+
+#ifdef __linux__
+		usleep(1000 * 1000);   // usleep takes sleep time in us (1 millionth of a second)
+#else
+		Sleep(1000);
+#endif
+
+	}
+
+	UDPSendString(udpSocket, ip, "END");
+
+	// Pair ip address
+	IPaddress pairIp;
+
+	if (SDLNet_ResolveHost(&pairIp, pairIpAddress.c_str(), pairPortNum) == SDL_ERROR)
+	{
+		std::cout << "Connection failed: " << SDLNet_GetError() << std::endl;
+		return false;
+	}
+
+	for (int i = 0; i < 5; i++)
+	{
+
+		if (m_NetworkMode == NETWORKMODE_SERVER)
+			UDPSendString(udpSocket, pairIp, "Hello CLIENT");
+		else if (m_NetworkMode == NETWORKMODE_CLIENT)
+			UDPSendString(udpSocket, pairIp, "Hello SERVER");
+
+#ifdef __linux__
+		usleep(1000 * 1000);   // usleep takes sleep time in us (1 millionth of a second)
+#else
+		Sleep(1000);
+#endif
+
+
+	}
+
+	if (m_NetworkMode == NETWORKMODE_SERVER)
+	{
+
+		for (int i = 0; i < 2; i++)
+		{
+			std::string data;
+			UDPRecieveString(udpSocket, pairIp, data);
+
+			std::cout << "Recieved message: " << data << std::endl;
+		}
+
+	}
+	else if (m_NetworkMode == NETWORKMODE_CLIENT)
+	{
+
+		for (int i = 0; i < 2; i++)
+		{
+			std::string data;
+			UDPRecieveString(udpSocket, pairIp, data);
+
+			std::cout << "Recieved message: " << data << std::endl;
+		}
+
+		for (int i = 0; i < 10; i++)
+		{
+
+			UDPSendString(udpSocket, pairIp, "Hello SERVER");
+
+#ifdef __linux__
+			usleep(1000 * 1000);   // usleep takes sleep time in us (1 millionth of a second)
+#else
+			Sleep(1000);
+#endif
+
+		}
+
+	}
+
+	return true;
+
+}
+
+bool CNetwork::Connect(const std::string ipAddressString, int port)
+{
 
     if (m_NetworkMode == NETWORKMODE_SERVER)
     {
@@ -56,7 +235,7 @@ bool CNetwork::Connect(const char* IpAddressString, int port)
 
         if (!m_Socket)
         {
-            std::cout << "Open failed: " << SDLNet_GetError();
+            std::cout << "TCP Open failed: " << SDLNet_GetError();
             return false;
         }
 
@@ -70,11 +249,10 @@ bool CNetwork::Connect(const char* IpAddressString, int port)
 
             m_ClientSocket = SDLNet_TCP_Accept(m_Socket);
 
-#ifdef LINUX
-			usleep(20 * 1000);   // usleep takes sleep time in us (1 millionth of a second)
-#endif
-#ifdef WINDOWS
-			Sleep(20);
+#ifdef __linux__
+			usleep(1000 * 1000);   // usleep takes sleep time in us (1 millionth of a second)
+#else
+			Sleep(1000);
 #endif
 
             if (m_ClientSocket)
@@ -90,7 +268,7 @@ bool CNetwork::Connect(const char* IpAddressString, int port)
 
         IPaddress ip;
 
-        if (SDLNet_ResolveHost(&ip, IpAddressString, port) == SDL_ERROR)
+        if (SDLNet_ResolveHost(&ip, ipAddressString.c_str(), port) == SDL_ERROR)
         {
             std::cout << "Connection failed: " << SDLNet_GetError();
             return false;

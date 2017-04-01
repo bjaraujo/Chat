@@ -2,7 +2,7 @@ import time
 import socket
 import select
 
-UDP_IP = "80.79.23.184"
+UDP_IP = "80.79.23.180"
 UDP_PORT = 1234
 
 print "UDP target IP:", UDP_IP
@@ -51,22 +51,4 @@ while True:
 
     time.sleep(1)
 
-'''    
-while True:
-
-    sock.sendto("Hello client B", (UDP_IP_B, UDP_PORT_B))
-
-    if not CONNECTED:
-        sock.sendto("ACK", (UDP_IP, UDP_PORT))
-
-    data, addr = sock.recvfrom(1024) # buffer size is 1024 bytes
-    
-    if addr[0] == UDP_IP_B:
-        print "--->Recieved message from client B: ", data
-        CONNECTED = True
-    else:
-        print data
-    
-    time.sleep(4)    
-'''
 
