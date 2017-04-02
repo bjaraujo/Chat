@@ -15,9 +15,9 @@ https://www.virtualmaster.com
 
 Change proxyIpAddress to point to the new server.
 
-Run host as:
+Run host as:  
 Chat.exe --host -n Bob
 
-Run client as:
+Run client as:  
 Chat.exe --client -n Alice
 
