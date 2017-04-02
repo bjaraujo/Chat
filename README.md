@@ -6,7 +6,7 @@ SDL: https://www.libsdl.org/download-1.2.php
 SDL_net: https://www.libsdl.org/projects/SDL_net/release-1.2.html  
 
 ## Compiling
-Use cmake to build:  
+Use cmake to build the project:  
 https://cmake.org
 
 ## Setup
