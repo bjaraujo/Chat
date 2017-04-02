@@ -25,4 +25,4 @@ Run host as:
 Run client as:  
 `Chat.exe --client -n Alice`
 
-A password is generated on the host. Once connected, communications are encrypted using 256bit encryption. The client should enter the password to be able to decrypt messages.
+A password is generated on the host. Once connected, the application drops the communication with the server and messages are encrypted using 256bit encryption. The client should enter the password to be able to decrypt messages.
