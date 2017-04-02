@@ -13,7 +13,7 @@ https://cmake.org
 Create a server and run serverS.py. You can use something like:  
 https://www.virtualmaster.com
 
-Change proxyIpAddress to point to the new server.
+Change <kbd>proxyIpAddress</kbd> to point to the new server.
 
 Run host as:  
 `Chat.exe --host -n Bob`
