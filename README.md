@@ -10,8 +10,10 @@ Use cmake to build:
 https://cmake.org
 
 ## Setup
-Run serverS.py on a public server. You can use something like:  
+Create a server and run serverS.py. You can use something like:  
 https://www.virtualmaster.com
+
+Change proxyIpAddress to point to the new server.
 
 Run host as:
 Chat.exe --host -n Bob
