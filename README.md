@@ -10,10 +10,13 @@ Use cmake to build:
 https://cmake.org
 
 ## Setup
-Create a server and run serverS.py. You can use something like:  
+Create a server. You can use something like:  
 https://www.virtualmaster.com
 
-Change <kbd>proxyIpAddress</kbd> to point to the new server.
+On the server run:
+`python serverS.py`
+
+Change `proxyIpAddress` to point to the new server.
 
 Run host as:  
 `Chat.exe --host -n Bob`
