@@ -19,13 +19,13 @@ int main(int argc, char **argv)
 	opt.addUsage("Usage: ");
 	opt.addUsage("");
 	opt.addUsage(" -h  --help              Prints this help ");
-	opt.addUsage(" -s  --server            Starts as server");
+	opt.addUsage(" -s  --host              Starts as host");
 	opt.addUsage(" -c  --client            Starts as client");
 	opt.addUsage(" -n  --nick [nick]       Chat nick name");
 	opt.addUsage("");
 
 	opt.setFlag("help", 'h');
-	opt.setFlag("server", 's');
+	opt.setFlag("host", 's');
 	opt.setFlag("client", 'c');
 	opt.setOption("nick", 'n');
 
@@ -55,14 +55,14 @@ int main(int argc, char **argv)
 
 	Network.Initialize();
 
-	// Pair client and server
+	// Pair client and host
 	const std::string proxyIpAddress = "80.79.23.114";
 	const int proxyPortNum = 1234;
 
 	std::string pairIpAddress;
 	int pairPortNum;
 
-	if (opt.getFlag("server") || opt.getFlag('s'))
+	if (opt.getFlag("host") || opt.getFlag('s'))
 	{
 		std::cout << "*** STARTING AS HOST" << std::endl;
 		Network.SetNetworkMode(NETWORKMODE_HOST);
