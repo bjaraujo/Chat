@@ -10,7 +10,7 @@ Use cmake to build:
 https://cmake.org
 
 ## Setup
-Run serverS.py on a public server. You can use something like:
+Run serverS.py on a public server. You can use something like:  
 https://www.virtualmaster.com
 
 Run host as:
