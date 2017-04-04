@@ -1,7 +1,15 @@
 
-#include <conio.h>
 #include <stdio.h>
 #include <time.h>
+
+#ifdef __linux__
+#include "conio.h"
+#define _kbhit kbhit
+#define _getch getch
+#else
+#include <conio.h>
+#endif
+
 #include <iostream>
 #include <string>
 

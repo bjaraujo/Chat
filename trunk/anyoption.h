@@ -4,6 +4,7 @@
 #include <iostream>
 #include <fstream>
 #include <stdlib.h>
+#include <string.h>
 #include <string>
 
 #define COMMON_OPT 	1

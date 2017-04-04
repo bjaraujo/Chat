@@ -1,4 +1,5 @@
 
+#include <stdlib.h>
 #include <iostream>
 
 #include "network.h"
@@ -142,7 +143,7 @@ bool CNetwork::Pair(std::string proxyIpAddressString, int proxyPortNum, std::str
 			if (pos != std::string::npos) {
 
 				pairIpAddress = data.substr(0, pos);
-				pairPortNum = stoi(data.substr(pos + 1, data.length() - pos - 1));
+				pairPortNum = atoi(data.substr(pos + 1, data.length() - pos - 1).c_str());
 
 				std::cout << "Pair ip address: " << data << std::endl;
 				break;
