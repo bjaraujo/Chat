@@ -39,13 +39,10 @@ int main(int argc, char **argv)
 
 	opt.processCommandArgs(argc, argv);
 
-	if (!opt.hasOptions()) {
+	if (!opt.hasOptions() || opt.getFlag("help") || opt.getFlag('?')) {
 		opt.printUsage();
 		return 0;
 	}
-
-	if (opt.getFlag("help") || opt.getFlag('?'))
-		opt.printUsage();
 
 	std::string nickName;
 
