@@ -292,7 +292,7 @@ int kbhit()
 	return 1;
 }
 
-int putch(int znak)
+void putch(int znak)
 {
 	wechochar(aktywneOkno,znak);
 }
