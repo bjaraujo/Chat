@@ -26,14 +26,14 @@ int main(int argc, char **argv)
 	opt.addUsage("");
 	opt.addUsage("Usage: ");
 	opt.addUsage("");
-	opt.addUsage(" -h  --help              Prints this help ");
-	opt.addUsage(" -s  --host              Starts as host");
+	opt.addUsage(" -?  --help              Prints this help ");
+	opt.addUsage(" -h  --host              Starts as host");
 	opt.addUsage(" -c  --client            Starts as client");
 	opt.addUsage(" -n  --nick [nick]       Chat nick name");
 	opt.addUsage("");
 
-	opt.setFlag("help", 'h');
-	opt.setFlag("host", 's');
+	opt.setFlag("help", '?');
+	opt.setFlag("host", 'h');
 	opt.setFlag("client", 'c');
 	opt.setOption("nick", 'n');
 
@@ -44,11 +44,9 @@ int main(int argc, char **argv)
 		return 0;
 	}
 
-	if (opt.getFlag("help") || opt.getFlag('h'))
+	if (opt.getFlag("help") || opt.getFlag('?'))
 		opt.printUsage();
 
-	const int passwordLength = 8;
-	char password[passwordLength + 1];
 	std::string nickName;
 
 	srand((unsigned int)time(NULL));
@@ -70,7 +68,7 @@ int main(int argc, char **argv)
 	std::string pairIpAddress;
 	int pairPortNum;
 
-	if (opt.getFlag("host") || opt.getFlag('s'))
+	if (opt.getFlag("host") || opt.getFlag('h'))
 	{
 		std::cout << "*** STARTING AS HOST" << std::endl;
 		Network.SetNetworkMode(NETWORKMODE_HOST);
@@ -85,17 +83,22 @@ int main(int argc, char **argv)
 
 	Network.Connect(pairIpAddress, pairPortNum);
 
+	const int passwordLength = 8;
+
 	if (Network.NetworkMode() == NETWORKMODE_HOST)
 	{
+
+		char passwordChar;
+
 		std::cout << "Password: ";
 		for (int i = 0; i < passwordLength; i++)
 		{
 			if (i % 2 == 0)
-				password[i] = 0x41 + rand() % 26;
+				passwordChar = 0x41 + rand() % 26;
 			else
-				password[i] = 0x30 + rand() % 10;
+				passwordChar = 0x30 + rand() % 10;
 
-			std::cout << password[i];
+			std::cout << passwordChar;
 		}
 
 		std::cout << std::endl;
@@ -146,6 +149,8 @@ int main(int argc, char **argv)
 
 	std::cout << "Talking to: " << pairNickName << std::endl;
 
+	ByteArray key;
+
 	if (Network.NetworkMode() == NETWORKMODE_CLIENT)
 	{
 
@@ -155,14 +160,9 @@ int main(int argc, char **argv)
 		cin.get(line, 256);
 
 		for (int i = 0; i < passwordLength; i++)
-			password[i] = line[i];
+			key.push_back(line[i]);
 
 	}
-
-	ByteArray key;
-
-	for (int i = 0; i < passwordLength; i++)
-		key.push_back(password[i]);
 
 	Aes256 aes(key);
 
