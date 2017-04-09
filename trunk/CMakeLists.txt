@@ -22,10 +22,20 @@ source_group("Source Files" FILES ${CHAT_NET_SOURCES})
 find_package(SDL REQUIRED)
 find_package(SDL_net REQUIRED)
 
+if (UNIX)
+find_package(Curses REQUIRED)
+endif (UNIX)
+
 include_directories(
     ${SDL_INCLUDE_DIR}
     ${SDL_NET_INCLUDE_DIRS}   
 )
+
+if (UNIX)
+include_directories(
+    ${CURSES_INCLUDE_DIR}
+)
+endif (UNIX)
 
 add_executable(Chat ${CHAT_NET_HEADERS} ${CHAT_NET_SOURCES})
 
@@ -34,3 +44,8 @@ target_link_libraries(Chat
     ${SDLNET_LIBRARY}
 )
 
+if (UNIX)
+target_link_libraries(Chat
+    ${CURSES_LIBRARIES}
+)
+endif (UNIX)
