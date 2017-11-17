@@ -35,11 +35,11 @@ private:
 
     ENetworkMode m_NetworkMode;
 
-	UDPsocket m_udpSocket;
-	IPaddress m_ip;
+    UDPsocket m_udpSocket;
+    IPaddress m_ip;
 
-	bool           UDPSendString(IPaddress& ip, std::string data);
-	bool		   UDPRecieveString(IPaddress& ip, std::string& data);
+    bool           UDPSendString(IPaddress& ip, std::string data);
+    bool		   UDPRecieveString(IPaddress& ip, std::string& data);
 
 public:
 
@@ -49,11 +49,11 @@ public:
     ENetworkMode   NetworkMode();
     void           SetNetworkMode(ENetworkMode NetworkMode);
 
-	void           Sleep(const int ms);
+    void           Sleep(const int ms);
 
-	bool		   Initialize();
-	bool		   Pair(const std::string proxyIpAddressString, int proxyPortNum, std::string& pairIpAddress, int& pairPortNum);
-	bool		   Connect(const std::string pairIpAddress, const int pairPortNum);
+    bool           Initialize();
+    bool           Pair(const std::string proxyIpAddressString, int proxyPortNum, std::string& pairIpAddress, int& pairPortNum);
+    bool           Connect(const std::string pairIpAddress, const int pairPortNum);
 
     bool           Send(const std::string data);
     bool           Receive(std::string& data);
