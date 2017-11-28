@@ -11,7 +11,7 @@ https://cmake.org
 
 ## Setup
 Create a server. You can use something like:  
-https://www.virtualmaster.com
+https://www.virtualmaster.com/virtualmaster/referral/29rj1q
 
 ## Running
 On the server run:
